@@ -8,6 +8,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     private var currentQuestion: QuizQuestion?
     private var currentQuestionIndex = 0
     private var correctAnswer = 0
+    private var statisticService: StatisticServiceImplementation?
     
     @IBOutlet private var imageView: UIImageView!
     @IBOutlet private var questionTextView: UILabel!
@@ -22,6 +23,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         questionFactory?.delegate = self
         questionFactory?.requestNextQuestion()
         alertPresenter = AlertPresenter(parrentController: self)
+        statisticService = StatisticServiceImplementation()
     }
     
     // MARK: - QuestionFactoryDelegate
@@ -106,4 +108,18 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         yesButton.isEnabled = isEnable
         noButton.isEnabled = isEnable
     }
+//    
+//    func makeMassedgeResualt() -> String {
+//        var resualtMassege = ""
+//        if let statisticService = statisticService {
+//            let count = "Количество сыгранных квизов: \(statisticService.gamesCount)"
+//                        
+//                        let record = "Рекорд: \(statisticService.bestGame.correct)/\(statisticService.bestGame.total) (\(statisticService.bestGame.date))"
+//                        
+//                        let accuracy = "Средняя точность \(String(format: "%.2f", statisticService.totalAccuracy*100))%"
+//                        
+//                        resualtMassege = "\n" + count + "\n" + record + "\n" + accuracy
+//        }
+//        return resualtMassege
+//    }
 }
