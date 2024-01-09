@@ -15,6 +15,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
     @IBOutlet private var counterLabel: UILabel!
     @IBOutlet private var noButton: UIButton!
     @IBOutlet private var yesButton: UIButton!
+    @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -129,5 +130,15 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
     private func enableButtons(isEnable: Bool) {
         yesButton.isEnabled = isEnable
         noButton.isEnabled = isEnable
+    }
+    
+    private func showLoadingIndicator() {
+        activityIndicator.isHidden = false
+        activityIndicator.startAnimating()
+    }
+    
+    private func alertNetworkError(message: String) {
+        activityIndicator.isHidden = true
+        let errorAlrtModel = AlertModel(title: "Ошибка!", message: message, buttonText: "Попробовать еще раз", completion: <#T##() -> ()#>)
     }
 }
