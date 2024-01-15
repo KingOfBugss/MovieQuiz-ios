@@ -72,9 +72,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
 //        let prettyDate = (staticService?.bestGame.date ?? Date()).dateTimeString
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "MM-dd-yyyy HH:mm"
-        
         let prettyDateFormat = dateFormatter.string(from: prettyDate!)
-        
         let message = """
         \(resultViewModel.text)
         Колличество сыгранных квизов: \(staticService?.gameCount ?? 0)
@@ -158,11 +156,12 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
         let errorAlertModel = AlertModel(title: "Ошибка!",
                                         message: message,
                                         buttonText: "Попробовать еще раз",
-                                        completion: {})
-        self.currentQuestionIndex = 0
-        self.correctAnswer = 0
-        self.questionFactory?.requestNextQuestion()
-        
+                                        completion: { [weak self] in
+            self?.currentQuestionIndex = 0
+            self?.correctAnswer = 0
+            self?.questionFactory?.requestNextQuestion()
+        })
+
         alertPresenter?.showResualtAlert(model: errorAlertModel)
     }
     
