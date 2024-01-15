@@ -19,13 +19,15 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
     
     override func viewDidLoad() {
         super.viewDidLoad()
-
-        questionFactory = QuestionFactory()
+        
+        imageView.layer.cornerRadius = 20
+        questionFactory = QuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
         questionFactory?.delegate = self
         questionFactory?.requestNextQuestion()
+        questionFactory?.loadData()
+        showLoadingIndicator()
 
-        let alertPresenter = AlertPresenter()
-        alertPresenter.delegate = self
+        let alertPresenter = AlertPresenter(delegate: self)
         self.alertPresenter = alertPresenter
         
         staticService = StatisticServiceImplementation()
@@ -33,6 +35,8 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
     
     // MARK: - QuestionFactoryDelegate
     func didReceiveNextQuestion(question: QuizQuestion?) {
+        hideLoadingIndicator()
+        
         guard let question = question else { return }
         
         currentQuestion = question
@@ -100,8 +104,8 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
     }
     
     private func convert(model: QuizQuestion) -> QuizStepViewModel {
-        QuizStepViewModel(
-            image: UIImage(named: model.image) ?? UIImage(),
+        return QuizStepViewModel(
+            image: UIImage(data: model.image) ?? UIImage(),
             question: model.text,
             questionNumber: "\(currentQuestionIndex + 1)/\(questionsAmount)")
     }
@@ -137,8 +141,31 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
         activityIndicator.startAnimating()
     }
     
+    private func hideLoadingIndicator() {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            self.activityIndicator.isHidden = true
+        }
+    }
+    
     private func alertNetworkError(message: String) {
-        activityIndicator.isHidden = true
-        let errorAlrtModel = AlertModel(title: "Ошибка!", message: message, buttonText: "Попробовать еще раз", completion: <#T##() -> ()#>)
+        hideLoadingIndicator()
+        let errorAlertModel = AlertModel(title: "Ошибка!",
+                                        message: message,
+                                        buttonText: "Попробовать еще раз",
+                                        completion: {})
+        self.currentQuestionIndex = 0
+        self.correctAnswer = 0
+        self.questionFactory?.requestNextQuestion()
+        
+        alertPresenter?.showResualtAlert(model: errorAlertModel)
+    }
+    
+    func didLoadDataFromServer() {
+        activityIndicator.isHidden = false
+        questionFactory?.requestNextQuestion()
+    }
+    
+    func didFailToLoadData(with error: Error) {
+        alertNetworkError(message: error.localizedDescription)
     }
 }
