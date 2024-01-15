@@ -68,11 +68,17 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
     
     private func showResult(quiz resultViewModel: QuizResultViewModel) {
         staticService?.store(correct: correctAnswer, total: questionsAmount)
-        let prettyDate = (staticService?.bestGame.date ?? Date()).dateTimeString
+        let prettyDate = staticService?.bestGame.date
+//        let prettyDate = (staticService?.bestGame.date ?? Date()).dateTimeString
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "MM-dd-yyyy HH:mm"
+        
+        let prettyDateFormat = dateFormatter.string(from: prettyDate!)
+        
         let message = """
         \(resultViewModel.text)
         Колличество сыгранных квизов: \(staticService?.gameCount ?? 0)
-        Рекорд: \(staticService?.bestGame.correct ?? 0) / \(staticService?.bestGame.total ?? 0) (\(prettyDate))
+        Рекорд: \(staticService?.bestGame.correct ?? 0) / \(staticService?.bestGame.total ?? 0) (\(prettyDateFormat))
         Средняя точность: \((staticService?.totalAccuracy ?? 0) * 100)%
         """
         
