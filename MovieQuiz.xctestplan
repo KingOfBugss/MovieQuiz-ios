@@ -25,6 +25,20 @@
         "identifier" : "2658BB302B5835AD006C6D16",
         "name" : "MovieQuizTests"
       }
+    },
+    {
+      "target" : {
+        "containerPath" : "container:MovieQuiz.xcodeproj",
+        "identifier" : "2658BB3E2B5ED094006C6D16",
+        "name" : "ArrayTests"
+      }
+    },
+    {
+      "target" : {
+        "containerPath" : "container:MovieQuiz.xcodeproj",
+        "identifier" : "26600AEE2B62F6D4007FE87A",
+        "name" : "MovieQuizUITests"
+      }
     }
   ],
   "version" : 1
