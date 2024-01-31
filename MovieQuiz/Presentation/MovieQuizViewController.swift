@@ -3,8 +3,6 @@ import UIKit
 final class MovieQuizViewController: UIViewController, AlertPresenterDelegate {
     
     private var presenter: MovieQuizPresenter!
-//    private var questionFactory: QuestionFactoryProtocol?
-
     private var alertPresenter: AlertPresenterProtocol?
     private var staticService: StatisticServiceProtocol?
     
@@ -19,10 +17,6 @@ final class MovieQuizViewController: UIViewController, AlertPresenterDelegate {
         super.viewDidLoad()
         
         imageView.layer.cornerRadius = 20
-//        questionFactory = QuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
-//        questionFactory?.delegate = self
-//        questionFactory?.requestNextQuestion()
-//        questionFactory?.loadData()
         presenter = MovieQuizPresenter(viewController: self)
         showLoadingIndicator()
         
@@ -31,8 +25,6 @@ final class MovieQuizViewController: UIViewController, AlertPresenterDelegate {
         
         staticService = StatisticServiceImplementation()
     }
-    
-
     
     @IBAction private func yesButtonClicked(_ sender: UIButton) {
         presenter.yesButtonClicked()
@@ -49,6 +41,8 @@ final class MovieQuizViewController: UIViewController, AlertPresenterDelegate {
     }
     
     func showResult(quiz result: QuizResultViewModel) {
+        self.imageView.layer.borderWidth = 0
+        
         let message = presenter.showResult(quiz: result)
         
         let alert = UIAlertController(
@@ -67,26 +61,17 @@ final class MovieQuizViewController: UIViewController, AlertPresenterDelegate {
         self.present(alert, animated: true, completion: nil)
     }
     
-    func showAnswerResult(isCorrect: Bool) {
-        presenter.didAnswer(isCorrectAnswer: isCorrect)
-        
+    func highlightImageBorder(isCorrectAnswer: Bool) {
         imageView.layer.masksToBounds = true
         imageView.layer.borderWidth = 8
-        imageView.layer.borderColor = isCorrect ? UIColor.ypGreen.cgColor : UIColor.ypRed.cgColor
-        
-        enableButtons(isEnable: false)
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            self.enableButtons(isEnable: true)
-            self.imageView.layer.borderWidth = 0
-            self.presenter.showNextQuestionOrResults()
-        }
+        imageView.layer.borderColor = isCorrectAnswer ? UIColor.ypGreen.cgColor : UIColor.ypRed.cgColor
     }
     
     func show(quiz step: QuizStepViewModel) {
         imageView.image = step.image
         questionTextView.text = step.question
         counterLabel.text = step.questionNumber
+        imageView.layer.borderWidth = 0
     }
     
      func showLoadingIndicator() {
@@ -104,19 +89,18 @@ final class MovieQuizViewController: UIViewController, AlertPresenterDelegate {
         alertNetworkError(message: message)
     }
     
-    private func enableButtons(isEnable: Bool) {
+    func enableButtons(isEnable: Bool) {
         yesButton.isEnabled = isEnable
         noButton.isEnabled = isEnable
     }
 
-    
     private func alertNetworkError(message: String) {
         hideLoadingIndicator()
         
         let errorAlertModel = AlertModel(title: "Ошибка!",
-                                        message: message,
-                                        buttonText: "Попробовать еще раз",
-                                        completion: { [weak self] in
+                                         message: message,
+                                         buttonText: "Попробовать еще раз",
+                                         completion: { [weak self] in
             self?.presenter.restartGame()
         })
 

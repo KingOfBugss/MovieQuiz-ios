@@ -8,13 +8,13 @@
 import UIKit
 
 final class MovieQuizPresenter: QuestionFactoryDelegate {
-    let questionsAmount: Int = 10
-    var currentQuestionIndex: Int = 0
-    var currentQuestion: QuizQuestion?
+    private let questionsAmount: Int = 10
+    private var currentQuestionIndex: Int = 0
+    private var currentQuestion: QuizQuestion?
     private let statisticService: StatisticServiceProtocol!
     private weak var viewController: MovieQuizViewController?
     private var questionFactory: QuestionFactoryProtocol?
-    var correctAnswer = 0
+    private var correctAnswer = 0
     
     
     init(viewController: MovieQuizViewController) {
@@ -63,14 +63,6 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
     func switchToNextQuestion() {
         currentQuestionIndex += 1
     }
-
-    private func didAnswer(isYes: Bool) {
-        guard let currentQuestion = currentQuestion else { return }
-        
-        let givenAnswer = isYes
-        
-        viewController?.showAnswerResult(isCorrect: givenAnswer == currentQuestion.currentAnswer)
-    }
     
     // MARK: - QuestionFactoryDelegate
     
@@ -94,22 +86,7 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
             self?.viewController?.show(quiz: viewModel)
         }
     }
-    
-    func showNextQuestionOrResults() {
-        if self.isLastQuestion() {
-            let text = "Ваш результат: \(correctAnswer)/10"
-            let viewModel = QuizResultViewModel(
-                        title: "Этот раунд окончен!",
-                        text: text,
-                        buttonText: "Сыграть ещё раз")
-            
-            viewController?.showResult(quiz: viewModel)
-        } else {
-            self.switchToNextQuestion()
-            questionFactory?.requestNextQuestion()
-        }
-    }
-    
+
     func showResult(quiz resultViewModel: QuizResultViewModel) -> String {
         statisticService.store(correct: correctAnswer, total: questionsAmount)
         
@@ -126,4 +103,39 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
 
         return message
     }
+    
+    func showAnswerResult(isCorrect: Bool) {
+        didAnswer(isCorrectAnswer: isCorrect)
+        viewController?.highlightImageBorder(isCorrectAnswer: isCorrect)
+        viewController?.enableButtons(isEnable: false)
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            self.viewController?.enableButtons(isEnable: true)
+            self.showNextQuestionOrResults()
+        }
+    }
+    
+    private func didAnswer(isYes: Bool) {
+        guard let currentQuestion = currentQuestion else { return }
+        
+        let givenAnswer = isYes
+        
+        showAnswerResult(isCorrect: givenAnswer == currentQuestion.currentAnswer)
+    }
+    
+    private func showNextQuestionOrResults() {
+        if self.isLastQuestion() {
+            let text = "Ваш результат: \(correctAnswer)/10"
+            let viewModel = QuizResultViewModel(
+                        title: "Этот раунд окончен!",
+                        text: text,
+                        buttonText: "Сыграть ещё раз")
+            
+            viewController?.showResult(quiz: viewModel)
+        } else {
+            self.switchToNextQuestion()
+            questionFactory?.requestNextQuestion()
+        }
+    }
+    
 }
