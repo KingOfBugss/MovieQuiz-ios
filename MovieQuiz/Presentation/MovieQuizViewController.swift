@@ -5,7 +5,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
     private let presenter = MovieQuizPresenter()
     private var questionFactory: QuestionFactoryProtocol?
 //    private var currentQuestion: QuizQuestion?
-    private var correctAnswer = 0
+//    private var correctAnswer = 0
     private var alertPresenter: AlertPresenterProtocol?
     private var staticService: StatisticServiceProtocol?
     
@@ -54,13 +54,10 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
         self.present(alert, animated: true)
     }
     
-//    private func answerGived(answer: Bool) {
-//        guard let currentAnswer = currentQuestion else {return}
-//        showAnswerResult(isCorrect: currentAnswer.currentAnswer == answer)
-//    }
-    
     func showResult(quiz resultViewModel: QuizResultViewModel) {
-        staticService?.store(correct: correctAnswer, total: presenter.questionsAmount)
+        if let staticService = staticService {
+            staticService.store(correct: presenter.correctAnswer, total: presenter.questionsAmount)
+        }
         
         let prettyDate = staticService?.bestGame.date
         let dateFormatter = DateFormatter()
@@ -74,8 +71,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
         """
         
         let alertModel = AlertModel(title: resultViewModel.title, message: message, buttonText: resultViewModel.buttonText) { [weak self] in
-            self?.presenter.currentQuestionIndex = 0
-            self?.correctAnswer = 0
+            self?.presenter.restartGame()
             self?.questionFactory?.requestNextQuestion()
         }
         
@@ -83,9 +79,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
     }
     
     func showAnswerResult(isCorrect: Bool) {
-        if isCorrect {
-            correctAnswer += 1
-        }
+        presenter.didAnswer(isCorrectAnswer: isCorrect)
         
         imageView.layer.masksToBounds = true
         imageView.layer.borderWidth = 8
@@ -96,7 +90,6 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
             self.enableButtons(isEnable: true)
             self.imageView.layer.borderWidth = 0
-            self.presenter.correctAnswer = self.correctAnswer
             self.presenter.questionFactory = self.questionFactory
             self.presenter.showNextQuestionOrResults()
         }
@@ -109,21 +102,6 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
         questionTextView.text = step.question
         counterLabel.text = step.questionNumber
     }
-    
-//    private func showNextQuestionOrResults() {
-//        if presenter.isLastQuestion() {
-//            let text = "Ваш результат: \(correctAnswer)/10"
-//            let viewModel = QuizResultViewModel(
-//                        title: "Этот раунд окончен!",
-//                        text: text,
-//                        buttonText: "Сыграть ещё раз")
-//            
-//            showResult(quiz: viewModel)
-//        } else {
-//            presenter.switchToNextQuestion()
-//            questionFactory?.requestNextQuestion()
-//        }
-//    }
     
     private func enableButtons(isEnable: Bool) {
         yesButton.isEnabled = isEnable
@@ -147,8 +125,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
                                         message: message,
                                         buttonText: "Попробовать еще раз",
                                         completion: { [weak self] in
-            self?.presenter.reseQuestionIndex()
-            self?.correctAnswer = 0
+            self?.presenter.restartGame()
             self?.questionFactory?.requestNextQuestion()
         })
 
