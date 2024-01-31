@@ -4,7 +4,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
     
     private let presenter = MovieQuizPresenter()
     private var questionFactory: QuestionFactoryProtocol?
-    private var currentQuestion: QuizQuestion?
+//    private var currentQuestion: QuizQuestion?
     private var correctAnswer = 0
     private var alertPresenter: AlertPresenterProtocol?
     private var staticService: StatisticServiceProtocol?
@@ -37,23 +37,14 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
     func didReceiveNextQuestion(question: QuizQuestion?) {
         hideLoadingIndicator()
         
-        guard let question = question else { return }
-        
-        currentQuestion = question
-        
-        let viewModel = presenter.convert(model: question)
-        DispatchQueue.main.async { [weak self] in
-            self?.show(quiz: viewModel)
-        }
+        presenter.didReceiveNextQuestion(question: question)
     }
     
     @IBAction private func yesButtonClicked(_ sender: UIButton) {
-        presenter.currentQuestion = currentQuestion
         presenter.yesButtonClicked()
     }
     
     @IBAction private func noButtonClicked(_ sender: UIButton) {
-        presenter.currentQuestion = currentQuestion
         presenter.noButtonClicked()
     }
     
@@ -63,15 +54,15 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
         self.present(alert, animated: true)
     }
     
-    private func answerGived(answer: Bool) {
-        guard let currentAnswer = currentQuestion else {return}
-        showAnswerResult(isCorrect: currentAnswer.currentAnswer == answer)
-    }
+//    private func answerGived(answer: Bool) {
+//        guard let currentAnswer = currentQuestion else {return}
+//        showAnswerResult(isCorrect: currentAnswer.currentAnswer == answer)
+//    }
     
-    private func showResult(quiz resultViewModel: QuizResultViewModel) {
+    func showResult(quiz resultViewModel: QuizResultViewModel) {
         staticService?.store(correct: correctAnswer, total: presenter.questionsAmount)
+        
         let prettyDate = staticService?.bestGame.date
-//        let prettyDate = (staticService?.bestGame.date ?? Date()).dateTimeString
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "MM-dd-yyyy HH:mm"
         let prettyDateFormat = dateFormatter.string(from: prettyDate!)
@@ -105,32 +96,34 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
             self.enableButtons(isEnable: true)
             self.imageView.layer.borderWidth = 0
-            self.showNextQuestionOrResults()
+            self.presenter.correctAnswer = self.correctAnswer
+            self.presenter.questionFactory = self.questionFactory
+            self.presenter.showNextQuestionOrResults()
         }
     }
     
     
     
-    private func show(quiz step: QuizStepViewModel) {
+    func show(quiz step: QuizStepViewModel) {
         imageView.image = step.image
         questionTextView.text = step.question
         counterLabel.text = step.questionNumber
     }
     
-    private func showNextQuestionOrResults() {
-        if presenter.isLastQuestion() {
-            let text = "Ваш результат: \(correctAnswer)/10"
-            let viewModel = QuizResultViewModel(
-                        title: "Этот раунд окончен!",
-                        text: text,
-                        buttonText: "Сыграть ещё раз")
-            
-            showResult(quiz: viewModel)
-        } else {
-            presenter.switchToNextQuestion()
-            questionFactory?.requestNextQuestion()
-        }
-    }
+//    private func showNextQuestionOrResults() {
+//        if presenter.isLastQuestion() {
+//            let text = "Ваш результат: \(correctAnswer)/10"
+//            let viewModel = QuizResultViewModel(
+//                        title: "Этот раунд окончен!",
+//                        text: text,
+//                        buttonText: "Сыграть ещё раз")
+//            
+//            showResult(quiz: viewModel)
+//        } else {
+//            presenter.switchToNextQuestion()
+//            questionFactory?.requestNextQuestion()
+//        }
+//    }
     
     private func enableButtons(isEnable: Bool) {
         yesButton.isEnabled = isEnable
