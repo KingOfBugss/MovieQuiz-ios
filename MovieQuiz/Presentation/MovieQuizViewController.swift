@@ -48,27 +48,23 @@ final class MovieQuizViewController: UIViewController, AlertPresenterDelegate {
         self.present(alert, animated: true)
     }
     
-    func showResult(quiz resultViewModel: QuizResultViewModel) {
-        if let staticService = staticService {
-            staticService.store(correct: presenter.correctAnswer, total: presenter.questionsAmount)
+    func showResult(quiz result: QuizResultViewModel) {
+        let message = presenter.showResult(quiz: result)
+        
+        let alert = UIAlertController(
+            title: result.title,
+            message: message,
+            preferredStyle: .alert)
+        
+        let action = UIAlertAction(title: result.buttonText, style: .default) { [weak self] _ in
+            guard let self = self else { return }
+            
+            self.presenter.restartGame()
         }
         
-        let prettyDate = staticService?.bestGame.date
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "MM-dd-yyyy HH:mm"
-        let prettyDateFormat = dateFormatter.string(from: prettyDate!)
-        let message = """
-        \(resultViewModel.text)
-        Колличество сыгранных квизов: \(staticService?.gameCount ?? 0)
-        Рекорд: \(staticService?.bestGame.correct ?? 0) / \(staticService?.bestGame.total ?? 0) (\(prettyDateFormat))
-        Средняя точность: \((staticService?.totalAccuracy ?? 0) * 100)%
-        """
+        alert.addAction(action)
         
-        let alertModel = AlertModel(title: resultViewModel.title, message: message, buttonText: resultViewModel.buttonText) { [weak self] in
-            self?.presenter.restartGame()
-        }
-        
-        alertPresenter?.showResualtAlert(model: alertModel)
+        self.present(alert, animated: true, completion: nil)
     }
     
     func showAnswerResult(isCorrect: Bool) {
@@ -93,11 +89,6 @@ final class MovieQuizViewController: UIViewController, AlertPresenterDelegate {
         counterLabel.text = step.questionNumber
     }
     
-    private func enableButtons(isEnable: Bool) {
-        yesButton.isEnabled = isEnable
-        noButton.isEnabled = isEnable
-    }
-    
      func showLoadingIndicator() {
         activityIndicator.isHidden = false
         activityIndicator.startAnimating()
@@ -112,6 +103,12 @@ final class MovieQuizViewController: UIViewController, AlertPresenterDelegate {
     func showNetworkError(message: String) {
         alertNetworkError(message: message)
     }
+    
+    private func enableButtons(isEnable: Bool) {
+        yesButton.isEnabled = isEnable
+        noButton.isEnabled = isEnable
+    }
+
     
     private func alertNetworkError(message: String) {
         hideLoadingIndicator()

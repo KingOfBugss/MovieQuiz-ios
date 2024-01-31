@@ -11,16 +11,21 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
     let questionsAmount: Int = 10
     var currentQuestionIndex: Int = 0
     var currentQuestion: QuizQuestion?
-    weak var viewController: MovieQuizViewController?
-    var questionFactory: QuestionFactoryProtocol?
+    private let statisticService: StatisticServiceProtocol!
+    private weak var viewController: MovieQuizViewController?
+    private var questionFactory: QuestionFactoryProtocol?
     var correctAnswer = 0
+    
     
     init(viewController: MovieQuizViewController) {
         self.viewController = viewController
         
+        statisticService = StatisticServiceImplementation()
+        
         questionFactory = QuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
         questionFactory?.loadData()
         viewController.showLoadingIndicator()
+
     }
     
     func yesButtonClicked() {
@@ -105,5 +110,20 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
         }
     }
     
-    
+    func showResult(quiz resultViewModel: QuizResultViewModel) -> String {
+        statisticService.store(correct: correctAnswer, total: questionsAmount)
+        
+        let prettyDate = statisticService?.bestGame.date
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "MM-dd-yyyy HH:mm"
+        let prettyDateFormat = dateFormatter.string(from: prettyDate!)
+        let message = """
+        \(resultViewModel.text)
+        Колличество сыгранных квизов: \(statisticService?.gameCount ?? 0)
+        Рекорд: \(statisticService?.bestGame.correct ?? 0) / \(statisticService?.bestGame.total ?? 0) (\(prettyDateFormat))
+        Средняя точность: \((statisticService?.totalAccuracy ?? 0) * 100)%
+        """
+
+        return message
+    }
 }
