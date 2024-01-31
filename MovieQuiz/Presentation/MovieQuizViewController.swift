@@ -2,10 +2,9 @@ import UIKit
 
 final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, AlertPresenterDelegate {
     
-    private let questionsAmount: Int = 10
+    private let presenter = MovieQuizPresenter()
     private var questionFactory: QuestionFactoryProtocol?
     private var currentQuestion: QuizQuestion?
-    private var currentQuestionIndex = 0
     private var correctAnswer = 0
     private var alertPresenter: AlertPresenterProtocol?
     private var staticService: StatisticServiceProtocol?
@@ -41,7 +40,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
         
         currentQuestion = question
         
-        let viewModel = convert(model: question)
+        let viewModel = presenter.convert(model: question)
         DispatchQueue.main.async { [weak self] in
             self?.show(quiz: viewModel)
         }
@@ -67,7 +66,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
     }
     
     private func showResult(quiz resultViewModel: QuizResultViewModel) {
-        staticService?.store(correct: correctAnswer, total: questionsAmount)
+        staticService?.store(correct: correctAnswer, total: presenter.questionsAmount)
         let prettyDate = staticService?.bestGame.date
 //        let prettyDate = (staticService?.bestGame.date ?? Date()).dateTimeString
         let dateFormatter = DateFormatter()
@@ -81,7 +80,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
         """
         
         let alertModel = AlertModel(title: resultViewModel.title, message: message, buttonText: resultViewModel.buttonText) { [weak self] in
-            self?.currentQuestionIndex = 0
+            self?.presenter.currentQuestionIndex = 0
             self?.correctAnswer = 0
             self?.questionFactory?.requestNextQuestion()
         }
@@ -107,12 +106,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
         }
     }
     
-    private func convert(model: QuizQuestion) -> QuizStepViewModel {
-        return QuizStepViewModel(
-            image: UIImage(data: model.image) ?? UIImage(),
-            question: model.text,
-            questionNumber: "\(currentQuestionIndex + 1)/\(questionsAmount)")
-    }
+    
     
     private func show(quiz step: QuizStepViewModel) {
         imageView.image = step.image
@@ -121,7 +115,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
     }
     
     private func showNextQuestionOrResults() {
-        if currentQuestionIndex == questionsAmount - 1 {
+        if presenter.isLastQuestion() {
             let text = "Ваш результат: \(correctAnswer)/10"
             let viewModel = QuizResultViewModel(
                         title: "Этот раунд окончен!",
@@ -130,7 +124,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
             
             showResult(quiz: viewModel)
         } else {
-            currentQuestionIndex += 1
+            presenter.switchToNextQuestion()
             questionFactory?.requestNextQuestion()
         }
     }
@@ -157,7 +151,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
                                         message: message,
                                         buttonText: "Попробовать еще раз",
                                         completion: { [weak self] in
-            self?.currentQuestionIndex = 0
+            self?.presenter.reseQuestionIndex()
             self?.correctAnswer = 0
             self?.questionFactory?.requestNextQuestion()
         })
