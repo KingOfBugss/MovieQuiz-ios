@@ -7,13 +7,21 @@
 
 import UIKit
 
-final class MovieQuizPresenter {
+final class MovieQuizPresenter: QuestionFactoryDelegate {
     let questionsAmount: Int = 10
     var currentQuestionIndex: Int = 0
     var currentQuestion: QuizQuestion?
     weak var viewController: MovieQuizViewController?
     var questionFactory: QuestionFactoryProtocol?
     var correctAnswer = 0
+    
+    init(viewController: MovieQuizViewController) {
+        self.viewController = viewController
+        
+        questionFactory = QuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
+        questionFactory?.loadData()
+        viewController.showLoadingIndicator()
+    }
     
     func yesButtonClicked() {
         didAnswer(isYes: true)
@@ -35,6 +43,8 @@ final class MovieQuizPresenter {
     }
     
     func restartGame() {
+        questionFactory?.requestNextQuestion()
+        
         currentQuestionIndex = 0
         correctAnswer = 0
     }
@@ -58,6 +68,17 @@ final class MovieQuizPresenter {
     }
     
     // MARK: - QuestionFactoryDelegate
+    
+    func didLoadDataFromServer() {
+        viewController?.hideLoadingIndicator()
+        questionFactory?.requestNextQuestion()
+    }
+        
+    func didFailToLoadData(with error: Error) {
+        let message = error.localizedDescription
+        viewController?.showNetworkError(message: message)
+    }
+    
     func didReceiveNextQuestion(question: QuizQuestion?) {
         guard let question = question else { return }
         
@@ -83,4 +104,6 @@ final class MovieQuizPresenter {
             questionFactory?.requestNextQuestion()
         }
     }
+    
+    
 }
