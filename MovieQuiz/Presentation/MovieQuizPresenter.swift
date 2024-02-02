@@ -94,13 +94,14 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "MM-dd-yyyy HH:mm"
         let prettyDateFormat = dateFormatter.string(from: prettyDate!)
+        let percentString = String(format: "%.2f", (statisticService?.totalAccuracy ?? 0) * 100)
         let message = """
-        \(resultViewModel.text)
-        Колличество сыгранных квизов: \(statisticService?.gameCount ?? 0)
-        Рекорд: \(statisticService?.bestGame.correct ?? 0) / \(statisticService?.bestGame.total ?? 0) (\(prettyDateFormat))
-        Средняя точность: \((statisticService?.totalAccuracy ?? 0) * 100)%
-        """
-
+            \(resultViewModel.text)
+            Колличество сыгранных квизов: \(statisticService?.gameCount ?? 0)
+            Рекорд: \(statisticService?.bestGame.correct ?? 0) / \(statisticService?.bestGame.total ?? 0) (\(prettyDateFormat))
+            Средняя точность: \(percentString)%
+            """
+        
         return message
     }
     

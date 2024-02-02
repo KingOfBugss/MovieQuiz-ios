@@ -10,15 +10,15 @@ import Foundation
 class StatisticServiceImplementation: StatisticServiceProtocol {
     
     enum Keys: String {
-        case correct, total, bestGame, gamesCount
+        case correct, total, bestGame, gamesCount, totalCorrectAnswers
     }
     
     private let userDefaults = UserDefaults.standard
     
     var totalAccuracy: Double {
         get {
-            let correct = userDefaults.integer(forKey: Keys.correct.rawValue)
-            let total = userDefaults.integer(forKey: Keys.total.rawValue)
+            let correct = userDefaults.integer(forKey: Keys.totalCorrectAnswers.rawValue)
+            let total = userDefaults.integer(forKey: Keys.gamesCount.rawValue) * 10
             return Double(correct) / Double(total)
         }
     }
@@ -52,10 +52,23 @@ class StatisticServiceImplementation: StatisticServiceProtocol {
         }
     }
     
+    var totalCorrectAnswers: Int {
+        get {
+            userDefaults.integer(forKey: Keys.totalCorrectAnswers.rawValue)
+        }
+        set {
+            let totalCorrectAnswers = userDefaults.integer(forKey: Keys.totalCorrectAnswers.rawValue)
+            let newTotalCorrectAnswers = totalCorrectAnswers + newValue
+            userDefaults.setValue(newTotalCorrectAnswers, forKey: Keys.totalCorrectAnswers.rawValue)
+        }
+    }
+    
     func store(correct count: Int, total amount: Int) {
         gameCount += 1
         
         let newRecord = GameRecord(correct: count, total: amount, date: Date())
+        
+        totalCorrectAnswers = count
         
         if !bestGame.comparisonResults(newRecord) {
             bestGame = newRecord
