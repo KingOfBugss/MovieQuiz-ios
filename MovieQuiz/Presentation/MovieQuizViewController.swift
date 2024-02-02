@@ -56,6 +56,8 @@ final class MovieQuizViewController: UIViewController, AlertPresenterDelegate, M
             self.presenter.restartGame()
         }
         
+        alert.view.accessibilityIdentifier = "Alert"
+        
         alert.addAction(action)
         
         self.present(alert, animated: true, completion: nil)
@@ -80,7 +82,7 @@ final class MovieQuizViewController: UIViewController, AlertPresenterDelegate, M
     }
     
     func hideLoadingIndicator() {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
             self.activityIndicator.isHidden = true
         }
     }
